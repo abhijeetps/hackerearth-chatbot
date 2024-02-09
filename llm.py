@@ -81,10 +81,12 @@ def save_to_mongodb(data):
     client = pymongo.MongoClient(uri)
 
     try:
+        print(f"Saving #{str(data)}")
         db = client.hackerearth
         collection = db.userdata
         collection.insert_one(data)
         client.close()
+        print("Saving successful.")
     except Exception as e:
         print(e)
 
@@ -93,14 +95,13 @@ def save_data(data):
     save_to_mongodb(data)
 
 def extract_user_info(user_message, conversation_history, model="gpt-3.5-turbo"):
-    print('Pikachu!')
     prompt = f"""
         Extract user's name, email, company's name and intent from in the following message separated by asterisk:
         ***
         #{user_message}
         ***
 
-        Find the user's intention from the conversation given below between pound symbol:
+        Find the user's intention and other user details from the conversation given below between pound symbol:
         ###
             #{conversation_history}
         ###
@@ -124,8 +125,7 @@ def extract_user_info(user_message, conversation_history, model="gpt-3.5-turbo")
             model=model,
         )
         data = json.loads(response.choices[0].message.content)
-        print(data)
-        if data["email"]:
+        if data["email"] != 'None':
             save_data(data)
 
     except Exception as e:
