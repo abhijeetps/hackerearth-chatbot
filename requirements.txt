@@ -1,0 +1,12 @@
+streamlit
+langchain-openai
+langchain-community
+langchain
+openai
+tiktoken
+pinecone-client==2.2.4
+beautifulsoup4
+python-dotenv
+pylint
+pymongo[srv]
+pypdf
