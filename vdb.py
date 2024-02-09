@@ -6,6 +6,9 @@ import pinecone
 from langchain_community.vectorstores import Pinecone
 from langchain_openai import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.document_loaders import PyPDFDirectoryLoader
+from langchain_community.document_loaders.merge import MergedDataLoader
+
 
 from consts import PINECONE_API_KEY, PINECONE_CLOUD, PINECONE_INDEX_NAME, PINECONE_DIMENSION, PINECONE_METRICS, CHUNK_OVERLAP, CHUNK_SIZE
 
@@ -33,8 +36,12 @@ def get_webpages_content():
         documents += get_content_from_webpage(webpage)
     return documents
 
-def get_vector_search_index(documents):
-    chunks = chunk_data(documents=documents)
+def read_doc(directory="doc/"):
+    file_loader = PyPDFDirectoryLoader(directory)
+    documents = file_loader.load_and_split()
+    return documents
+
+def get_vector_search_index(chunks):
     embeddings = OpenAIEmbeddings()
 
     pinecone.init(
@@ -63,6 +70,19 @@ def retrieve_query(documents, query, k=4):
     matching_results = index.similarity_search(query=query, k=k)
     return matching_results
 
+def process_pdf(directory='doc/', chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP):
+    loader = PyPDFDirectoryLoader(directory)
+
+    data = loader.load()
+
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap
+    )
+    documents = text_splitter.split_documents(data)
+
+    return documents
+
 def chunk_data(documents, chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP):
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
@@ -74,8 +94,14 @@ def chunk_data(documents, chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP):
 
 
 def init_vdb():
-    documents = get_webpages_content()
-    index = get_vector_search_index(documents)
+    content = get_webpages_content()
+    chunked_content = chunk_data(content)
+
+    chunked_document = process_pdf()
+
+    chunked = chunked_content + chunked_document
+
+    index = get_vector_search_index(chunked)
     return index
 
 init_vdb()
