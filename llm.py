@@ -1,4 +1,5 @@
 import json
+import pymongo
 from openai import OpenAI
 import pinecone
 from langchain_community.vectorstores import Pinecone
@@ -74,9 +75,22 @@ def get_answer(query, conversation):
     answer = retrieve_answer(prompt)
     return answer
 
+def save_to_mongodb(data):
+    uri = "mongodb+srv://readwrite:12345@hackerearth.kgaoufa.mongodb.net/?retryWrites=true&w=majority"
+
+    client = pymongo.MongoClient(uri)
+
+    try:
+        db = client.hackerearth
+        collection = db.userdata
+        collection.insert_one(data)
+        client.close()
+    except Exception as e:
+        print(e)
+
+
 def save_data(data):
-    with open(f"user_data/{data['email']}.json", "w") as file:
-        file.write(json.dumps(data))
+    save_to_mongodb(data)
 
 def extract_user_info(user_message, conversation_history, model="gpt-3.5-turbo"):
     print('Pikachu!')
