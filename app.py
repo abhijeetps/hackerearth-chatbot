@@ -22,6 +22,7 @@ def app():
         # Display user message in chat message container
         st.chat_message("user").markdown(prompt)
 
+        # Extract user info if conversation history is long enough
         if len(st.session_state.messages) > 4:
             extract_user_info(user_message=prompt, conversation_history=st.session_state.messages)
 
@@ -30,8 +31,9 @@ def app():
 
         # Display assistant response in chat message container
         with st.chat_message("assistant"):
-            response = get_answer(prompt, st.session_state.messages)
-            st.markdown(response)
+            stream = get_answer(prompt, st.session_state.messages)
+            response = st.write_stream(stream)
+
             # Add assistant response to chat history
             st.session_state.messages.append({"role": "assistant", "content": response})
 
