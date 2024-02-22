@@ -61,11 +61,13 @@ def retrieve_answer(prompt, model="gpt-3.5-turbo"):
     ]
     try:
         client = get_openai_client()
-        response = client.chat.completions.create(
+        stream = client.chat.completions.create(
             messages=messages,
             model=model,
+            stream=True
         )
-        return response.choices[0].message.content
+        return stream
+        # return response.choices[0].message.content
     except Exception as e:
         print(f"Error occured while communicating with LLM: #{e}")
 
